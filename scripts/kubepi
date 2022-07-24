@@ -4,9 +4,8 @@ set -e
 ProgName=$(basename $0)
 
 sub_help(){
-    echo "Usage: $ProgName <subcommand> [options]\n"
+    echo "Usage: ${ProgName} <subcommand> [options]\n"
     echo "Subcommands:"
-    echo "    enableswap {size}         enable swap and configure kubernetes to be OK with that"
     echo "    setupdns                  install and configure a dnsmasq server for the network"
     echo "    preinstall                install kubernetes components"
     echo "    setupcontroller           install and configure kubernetes as a controller node"
@@ -30,11 +29,6 @@ sub_preinstall(){
     # hold the k8s components - no auto upgrades please
     sudo apt-mark hold kubelet kubeadm kubectl
 
-    # install upgraded qemu static binary handling
-    wget -O /tmp/qemu-static.deb http://ftp.uk.debian.org/debian/pool/main/q/qemu/qemu-user-static_6.2%2Bdfsg-2_arm64.deb
-    sudo apt-get install -y /tmp/qemu-static.deb
-    rm /tmp/qemu-static.deb
-
     # prepull kube images ready for join or creating a cluster
     sudo kubeadm config images pull
 
@@ -49,30 +43,13 @@ sub_setupcontroller(){
     fi
 
     # controller init + configure local user with kubectl
-    sudo kubeadm init --control-plane-endpoint=$HOSTNAME.$DOMAIN --pod-network-cidr="$POD_NETWORK_CIDR" --apiserver-advertise-address=$ADDRESS  --node-name=$HOSTNAME
-    mkdir -p $HOME/.kube
-    sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
-    sudo chown $(id -u):$(id -g) $HOME/.kube/config
+    sudo kubeadm init --control-plane-endpoint=${HOSTNAME}.${DOMAIN} --pod-network-cidr="${POD_NETWORK_CIDR}" --apiserver-advertise-address=${ADDRESS}  --node-name=${HOSTNAME}
+    mkdir -p ${HOME}/.kube
+    sudo cp /etc/kubernetes/admin.conf ${HOME}/.kube/config
+    sudo chown $(id -u):$(id -g) ${HOME}/.kube/config
 
     # install antrea
     kubectl apply -f https://github.com/antrea-io/antrea/releases/download/v1.4.0/antrea.yml
-}
-
-sub_enableswap(){
-    amount="8G"
-    if [ ! -z "$1" ]; then
-        amount="$1"
-    fi
-
-
-    sudo fallocate -l $amount /data/swapfile
-    sudo chmod 600 /data/swapfile
-    sudo mkswap /data/swapfile
-    sudo swapon /data/swapfile
-    echo "/data/swapfile swap swap defaults 0 0" | sudo tee -a /etc/fstab
-
-    #override the default config for the kubelet on this server to allow it to start with swap on
-    echo "KUBELET_EXTRA_ARGS=$KUBELET_EXTRA_ARGS --fail-swap-on=false" | sudo tee -a /etc/default/kubelet
 }
 
 sub_joincontroller(){
@@ -80,6 +57,10 @@ sub_joincontroller(){
         print "please provide an address for a controller node as the first argument"
         exit 1
     fi
+    # add this host into the controller's hosts file
+    ssh $1 sudo bash -c "echo '${ADDRESS} ${HOSTNAME}' >> /etc/hosts"
+
+    # No join the node to the cluster
     sudo $(ssh $1 kubeadm token create --print-join-command)
 }
 
@@ -101,8 +82,8 @@ bind-interfaces
 # set the kubernetes domain
 domain=${DOMAIN}
 
-# enable wildcard domains for kubepi to this server
-address=/${DOMAIN}/$ADDRESS
+# enable wildcard domains for ${DOMAIN} to this server
+address=/${DOMAIN}/${ADDRESS}
 
 # enable logging
 #log-queries" | sudo tee /etc/dnsmasq.d/kubepi.conf
@@ -119,8 +100,8 @@ case $subcommand in
         shift
         sub_${subcommand} $@
         if [ $? = 127 ]; then
-            echo "Error: '$subcommand' is not a known subcommand." >&2
-            echo "       Run '$ProgName --help' for a list of known subcommands." >&2
+            echo "Error: '${subcommand}' is not a known subcommand." >&2
+            echo "       Run '${ProgName} --help' for a list of known subcommands." >&2
             exit 1
         fi
         ;;

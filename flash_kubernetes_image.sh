@@ -35,17 +35,6 @@ echo "hostname=$hostname, address=$address, data_drive_uuid=$data_drive_uuid"
 rm -R $WORKDIR/$hostname/ 2> /dev/null || true
 mkdir -p $WORKDIR/$hostname
 
-
-# generate the hosts file addon
-for host in ${ALL_HOSTS[@]}; do
-    host="$(echo "${host}" | tr  '[:lower:]' '[:upper:]')";  # uppercase the whole string
-    host_address_var="${host}_ADDRESS"
-    host_hostname_var="${host}_HOSTNAME"
-
-    printf "%s %s\n" "${!host_address_var}" "${!host_hostname_var}.$NODE_DOMAIN" >> $WORKDIR/$hostname/hosts
-done
-hosts_file_encoded=$(cat $WORKDIR/$hostname/hosts | base64)
-
 #generate base64 encoded content from script files
 kubepi_script="$( cat scripts/kubepi | base64 )"
 
@@ -60,13 +49,6 @@ eval "echo \"${user_data_template}\"" > $WORKDIR/$hostname/user-data
 
 network_config_template=$(cat templates/network-config)
 eval "echo \"${network_config_template}\"" > $WORKDIR/$hostname/network-config
-
-# optional WIFI setup
-if [ ! -z $wifi_ssid ] || [ ! -z $wifi_password ]; then
-    network_wifi_config_template=$(cat templates/network-config-wifi)
-    eval "echo \"${network_wifi_config_template}\"" >> $WORKDIR/$hostname/network-config
-fi
-
 
 # use cached version if available
 if [ -f $WORKDIR/cached.img ]; then

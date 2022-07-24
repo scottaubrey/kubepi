@@ -59,12 +59,6 @@ func main() {
 		if err != nil {
 			log.Panicln("could not find configured nodes key in config file", err)
 		}
-		address, err := config.Get(fmt.Sprintf("nodes.%s.address", nodeName))
-		wifiSSID, err := config.Get(fmt.Sprintf("nodes.%s.wifi.ssid", nodeName))
-		wifiPassword, err := config.Get(fmt.Sprintf("nodes.%s.wifi.password", nodeName))
-
-		log.Println(fmt.Sprintf("node=%s, hostname=%s, address=%s, wifi SSID=%s, wifi password=%s", nodeName, hostname, address, wifiSSID, wifiPassword))
-
 		// node, err := nodes.Get(nodeName)
 		// if err != nil {
 		// 	log.Panicln("could not find configured node", nodeName, " in config file")
