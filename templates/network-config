@@ -1,0 +1,14 @@
+version: 2
+ethernets:
+  eth0:
+    dhcp4: true
+vlans:
+  vlan2:
+    id: 2
+    link: eth0
+    addresses:
+      - '$address$NODE_NETWORK_CIDR_SUFFIX'
+    optional: false
+    nameservers:
+      search: [$NODE_DOMAIN]
+      addresses: [$NODE_DNSSERVER]

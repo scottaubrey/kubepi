@@ -1,0 +1,127 @@
+#!/bin/bash
+set -e
+
+ProgName=$(basename $0)
+
+sub_help(){
+    echo "Usage: $ProgName <subcommand> [options]\n"
+    echo "Subcommands:"
+    echo "    enableswap {size}         enable swap and configure kubernetes to be OK with that"
+    echo "    setupdns                  install and configure a dnsmasq server for the network"
+    echo "    preinstall                install kubernetes components"
+    echo "    setupcontroller           install and configure kubernetes as a controller node"
+    echo "    joincontroller {address}  install and configure kubernetes as a worker node. "
+    echo ""
+}
+
+# get the hostname, domain and IP of the current host - this will be the default domain
+HOSTNAME=$(hostname -s)
+DOMAIN=$(hostname -d)
+ADDRESS=$(hostname -i)
+
+
+sub_preinstall(){
+    # get the most up to date package info
+    sudo apt-get update
+
+    # install kubernetes components
+    sudo apt-get install -y containerd kubelet kubeadm kubectl
+
+    # hold the k8s components - no auto upgrades please
+    sudo apt-mark hold kubelet kubeadm kubectl
+
+    # install upgraded qemu static binary handling
+    wget -O /tmp/qemu-static.deb http://ftp.uk.debian.org/debian/pool/main/q/qemu/qemu-user-static_6.2%2Bdfsg-2_arm64.deb
+    sudo apt-get install -y /tmp/qemu-static.deb
+    rm /tmp/qemu-static.deb
+
+    # prepull kube images ready for join or creating a cluster
+    sudo kubeadm config images pull
+
+    # install flux CLI
+    curl -s https://fluxcd.io/install.sh | sudo bash
+}
+
+sub_setupcontroller(){
+    POD_NETWORK_CIDR="10.244.0.0/16"
+    if [ ! -z "$1" ]; then
+        POD_NETWORK_CIDR="$1"
+    fi
+
+    # controller init + configure local user with kubectl
+    sudo kubeadm init --control-plane-endpoint=$HOSTNAME.$DOMAIN --pod-network-cidr="$POD_NETWORK_CIDR" --apiserver-advertise-address=$ADDRESS  --node-name=$HOSTNAME
+    mkdir -p $HOME/.kube
+    sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
+    sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+    # install antrea
+    kubectl apply -f https://github.com/antrea-io/antrea/releases/download/v1.4.0/antrea.yml
+}
+
+sub_enableswap(){
+    amount="8G"
+    if [ ! -z "$1" ]; then
+        amount="$1"
+    fi
+
+
+    sudo fallocate -l $amount /data/swapfile
+    sudo chmod 600 /data/swapfile
+    sudo mkswap /data/swapfile
+    sudo swapon /data/swapfile
+    echo "/data/swapfile swap swap defaults 0 0" | sudo tee -a /etc/fstab
+
+    #override the default config for the kubelet on this server to allow it to start with swap on
+    echo "KUBELET_EXTRA_ARGS=$KUBELET_EXTRA_ARGS --fail-swap-on=false" | sudo tee -a /etc/default/kubelet
+}
+
+sub_joincontroller(){
+    if [ -z "$1" ]; then
+        print "please provide an address for a controller node as the first argument"
+        exit 1
+    fi
+    sudo $(ssh $1 kubeadm token create --print-join-command)
+}
+
+sub_setupdns(){
+    # install dnsmasq package. Note: dnsmasq fails to start in default ubuntu 20.04, as the port conflicts with systemd
+    sudo apt-get install -y dnsmasq
+
+    # enable conf-dir based configuration
+    echo 'conf-dir=/etc/dnsmasq.d/,*.conf' | sudo tee -a /etc/dnsmasq.conf
+
+    # create a config file for dnsmasq - including the hosts file
+    echo "# upstream DNS server
+server=1.1.1.1
+
+# bind only to internal network
+interface=eth0
+bind-interfaces
+
+# set the kubernetes domain
+domain=${DOMAIN}
+
+# enable wildcard domains for kubepi to this server
+address=/${DOMAIN}/$ADDRESS
+
+# enable logging
+#log-queries" | sudo tee /etc/dnsmasq.d/kubepi.conf
+
+    sudo systemctl restart dnsmasq
+}
+
+subcommand=$1
+case $subcommand in
+    "" | "-h" | "--help")
+        sub_help
+        ;;
+    *)
+        shift
+        sub_${subcommand} $@
+        if [ $? = 127 ]; then
+            echo "Error: '$subcommand' is not a known subcommand." >&2
+            echo "       Run '$ProgName --help' for a list of known subcommands." >&2
+            exit 1
+        fi
+        ;;
+esac
