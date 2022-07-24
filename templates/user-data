@@ -79,6 +79,10 @@ write_files:
     permissions: '0755'
     encoding: base64
     content: $kubepi_script
+  - path: /etc/hosts
+    append: true
+    content: $hosts_file_encoded
+    encoding: base64
   - path: /etc/fstab
     append: true
     content: '$fstab'

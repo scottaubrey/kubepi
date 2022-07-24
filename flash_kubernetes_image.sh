@@ -35,6 +35,10 @@ echo "hostname=$hostname, address=$address, data_drive_uuid=$data_drive_uuid"
 rm -R $WORKDIR/$hostname/ 2> /dev/null || true
 mkdir -p $WORKDIR/$hostname
 
+# generate the hosts file addon
+printf "%s %s\n" "${address}" "${hostname}.$NODE_DOMAIN" >> $WORKDIR/$hostname/hosts
+hosts_file_encoded=$(cat $WORKDIR/$hostname/hosts | base64)
+
 #generate base64 encoded content from script files
 kubepi_script="$( cat scripts/kubepi | base64 )"
 
