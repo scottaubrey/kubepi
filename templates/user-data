@@ -23,7 +23,7 @@ groups:
   - ubuntu: [root, sys]
 
 package_update: true
-package_upgrade: true
+package_upgrade: false
 packages: ['apt-transport-https', 'ca-certificates', 'curl', 'build-essential', 'git']
 apt:
   sources:
@@ -92,4 +92,6 @@ write_files:
       root = '/data/containerd/data'
 
 runcmd:
+  - sudo apt-get dist-upgrade
+  - curl -s https://install.zerotier.com | sudo bash
   - reboot
