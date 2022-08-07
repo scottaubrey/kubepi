@@ -1,10 +1,14 @@
 version: 2
 ethernets:
   eth0:
-    dhcp4: true
     addresses:
-      - '$address$NODE_NETWORK_CIDR_SUFFIX'
+      - '${address}${NODE_NETWORK_CIDR_SUFFIX}'
     optional: false
+    routes:
+      - to: default
+        via: '${NODE_NETWORK_GATEWAY}'
     nameservers:
-      search: [$NODE_DOMAIN]
-      addresses: [$NODE_DNSSERVER]
+      search: [${NODE_DOMAIN}]
+      addresses:
+        - '${NODE_DNSSERVER}'
+        - '${NODE_NETWORK_DNSSERVER}'
