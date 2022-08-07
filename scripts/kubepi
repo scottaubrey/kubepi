@@ -48,8 +48,8 @@ sub_setupcontroller(){
     sudo cp /etc/kubernetes/admin.conf ${HOME}/.kube/config
     sudo chown $(id -u):$(id -g) ${HOME}/.kube/config
 
-    # install antrea
-    kubectl apply -f https://github.com/antrea-io/antrea/releases/download/v1.4.0/antrea.yml
+    # install a CNI
+    kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
 }
 
 sub_joincontroller(){
@@ -58,7 +58,7 @@ sub_joincontroller(){
         exit 1
     fi
     # add this host into the controller's hosts file
-    ssh $1 sudo bash -c "echo '${ADDRESS} ${HOSTNAME}' >> /etc/hosts"
+    ssh $1 "sudo bash -c 'echo ${ADDRESS} ${HOSTNAME} >> /etc/hosts'"
 
     # No join the node to the cluster
     sudo $(ssh $1 kubeadm token create --print-join-command)
