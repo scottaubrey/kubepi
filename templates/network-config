@@ -10,5 +10,4 @@ ethernets:
     nameservers:
       search: ['${node_domain}']
       addresses:
-        - '${node_dns_server}'
         - '${network_dns_server}'

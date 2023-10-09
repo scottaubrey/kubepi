@@ -18,7 +18,7 @@ config_exists () {
 }
 
 config_value () {
-    echo $(yq "$1" config.yaml)
+    echo "$(yq "$1" config.yaml)"
 }
 
 work_dir=$(config_value ".workDir")
@@ -46,8 +46,7 @@ echo "network_cidr_suffix=$network_cidr_suffix network_gateway=$network_gateway 
 
 
 node_domain=$(config_value ".domain")
-node_dns_server=$(config_value ".dnsServer")
-echo "node_domain=$node_domain node_dns_server=$node_dns_server"
+echo "node_domain=$node_domain"
 
 # this script requires a node prefix, as configured in the `config.var` file.
 nodename="$1";
@@ -69,8 +68,7 @@ rm -R $work_dir/$hostname/ 2> /dev/null || true
 mkdir -p $work_dir/$hostname
 
 # generate the hosts file addon
-printf "%s %s\n" "${address}" "${hostname}.$node_domain" >> $work_dir/$hostname/hosts
-hosts_file_encoded=$(cat $work_dir/$hostname/hosts | base64)
+hosts_file_encoded="$(config_value '.nodes|to_entries|.[].value|.address + " " + .hostname' | base64)"
 
 dns_command="echo no dns server"
 if [ $( config_value '.nodes.'$nodename'.roles|any_c(. == "dns")' ) == "true" ]; then
@@ -93,7 +91,7 @@ flux_cli="echo no flux configured"
 if [ $( config_value '.nodes.'$nodename'.roles|any_c(. == "controller")' ) == "true" ]; then
     # gitops (flux) integration
     if config_exists ".flux" && config_exists ".flux.gitProvider"; then
-        flux_cli="GITHUB_TOKEN="$( config_value '.flux.token' )" flux bootstrap $( config_value '.flux.gitProvider' ) $( config_value  '.flux.flags|with_entries(.value = "--"+(.key)+"=\""+(.value)+"\"")|to_entries|[.[].value]|join(" ")')"
+        flux_cli="KUBECONFIG=/etc/rancher/k3s/k3s.yaml GITHUB_TOKEN="$( config_value '.flux.token' )" flux bootstrap $( config_value '.flux.gitProvider' ) $( config_value  '.flux.flags|with_entries(.value = "--"+(.key)+"=\""+(.value)+"\"")|to_entries|[.[].value]|join(" ")')"
     fi
 fi
 echo "flux_cli=${flux_cli}"
