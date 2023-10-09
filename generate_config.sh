@@ -68,7 +68,7 @@ rm -R $work_dir/$hostname/ 2> /dev/null || true
 mkdir -p $work_dir/$hostname
 
 # generate the hosts file addon
-hosts_file_encoded="$(config_value '.nodes|to_entries|.[].value|.address + " " + .hostname' | base64)"
+hosts_file_encoded="$(config_value '.nodes|to_entries|.[].value|.address + " " + .hostname + ".'${node_domain}'"' | base64)"
 
 dns_command="echo no dns server"
 if [ $( config_value '.nodes.'$nodename'.roles|any_c(. == "dns")' ) == "true" ]; then
