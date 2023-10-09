@@ -55,15 +55,12 @@ func main() {
 		}
 		nodeName := flag.Args()[1]
 
-		hostname, err := config.Get(fmt.Sprintf("nodes.%s.hostname", nodeName))
+		node, err := yaml.Child(config.Root, fmt.Sprintf("nodes.%s.hostname", nodeName))
+		// node, err := config.Get(fmt.Sprintf("nodes.%s.hostname", nodeName))
 		if err != nil {
-			log.Panicln("could not find configured nodes key in config file", err)
+			log.Panicf("could not find configured node '%s' in config file: %s", nodeName, err)
 		}
-		// node, err := nodes.Get(nodeName)
-		// if err != nil {
-		// 	log.Panicln("could not find configured node", nodeName, " in config file")
-		// }
-		// log.Println("flashing for node", nodeName)
+		log.Println("flashing for node", node)
 	}
 }
 
@@ -88,6 +85,11 @@ func precache(workDir string, imageUrl string) {
 		return
 	}
 
+	_, err = os.Stat(workDir)
+	if os.IsNotExist(err) {
+		os.Mkdir(workDir, os.FileMode(744))
+	}
+
 	log.Println("Getting image with curl")
 	_, err = script.Exec(fmt.Sprintf("curl -s --output %s %s", cachedImageXz, imageUrl)).Bytes()
 	if err != nil {
@@ -106,3 +108,5 @@ func precache(workDir string, imageUrl string) {
 	}
 	log.Println("image precached!")
 }
+
+func flash()
