@@ -88,7 +88,9 @@ echo "user_username=$user_username user_ssh_pub_key=$user_ssh_pub_key"
 
 
 flux_cli="echo no flux configured"
+k3s_exec_options=""
 if [ $( config_value '.nodes.'$nodename'.roles|any_c(. == "controller")' ) == "true" ]; then
+    k3s_exec_options="--node-external-ip=${address} --flannel-backend=wireguard-native --flannel-external-ip"
     # gitops (flux) integration
     if config_exists ".flux" && config_exists ".flux.gitProvider"; then
         flux_cli="KUBECONFIG=/etc/rancher/k3s/k3s.yaml GITHUB_TOKEN="$( config_value '.flux.token' )" flux bootstrap $( config_value '.flux.gitProvider' ) $( config_value  '.flux.flags|with_entries(.value = "--"+(.key)+"=\""+(.value)+"\"")|to_entries|[.[].value]|join(" ")')"

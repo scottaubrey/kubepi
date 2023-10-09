@@ -99,7 +99,7 @@ runcmd:
   - ${zerotier_cli}
 
   # install and setup k3s
-  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\"server --node-external-ip=${address} --flannel-backend=wireguard-native --flannel-external-ip\" K3S_TOKEN=\"$token\" K3S_URL=\"$k3s_url\" K3S_KUBECONFIG_MODE=\"744\" sh -s -
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC=\"$k3s_exec_options\" K3S_TOKEN=\"$token\" K3S_URL=\"$k3s_url\" K3S_KUBECONFIG_MODE=\"744\" sh -s -
   - kubectl wait deployments -n kube-system --for="condition=available" --timeout=60s coredns
   - kubectl wait deployments -n kube-system --for="condition=available" --timeout=60s local-path-provisioner
   - kubectl wait deployments -n kube-system --for="condition=available" --timeout=60s metrics-server
