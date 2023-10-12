@@ -84,7 +84,8 @@ fi
 # User templates
 user_ssh_pub_key="$( config_value '.user.sshPubKey' )"
 user_username="$( config_value '.user.username' )"
-echo "user_username=$user_username user_ssh_pub_key=$user_ssh_pub_key"
+user_password_hash="$( config_value '.user.passwordHash' )"
+echo "user_username=$user_username user_ssh_pub_key=$user_ssh_pub_key user_password_hash=$user_password_hash"
 
 
 flux_cli="echo no flux configured"

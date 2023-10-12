@@ -10,7 +10,7 @@ users:
     groups: sudo, users, admin
     # lock_passwd: true
     lock_passwd: false
-    passwd: crypt-compatible-password-hash-here
+    passwd: $user_password_hash
     ssh_pwauth: false
     shell: /bin/bash
     ssh_import_id: None

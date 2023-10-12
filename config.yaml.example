@@ -6,7 +6,7 @@ cacheImage: true
 user:
   sshPubKey: ssh-rsa Public key
   username: scottaubrey
-
+  passwordHash: crypt-compatible-password-hash-here
 
 domain: kubepi
 
