@@ -30,7 +30,7 @@ create a file called `config.yaml` by copying the `config.yaml.example` file and
 - `flux.owner` - your github username
 - `flux.repository` - your github repository
 
-But review all the values in the config file. Note: some are optional (such as `flux` and `zerotier_network`). The default setup here is for a 3 node cluster, with 1 acting as controlplane
+But review all the values in the config file. Note: some are optional (such as `flux` and `zerotier_network`). The default setup here is for a 4 node cluster, with 1 acting as controlplane
 
 then run `./flash_kubernetes_image.sh node_name` with your sdcard inserted. follow the prompts, wait until it's finished and repeat for all your node sdcards.
 
