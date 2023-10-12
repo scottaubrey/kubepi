@@ -21,14 +21,14 @@ Finally, if you want to use the zerotier integration, make sure you have an acco
 
 create a file called `config.yaml` by copying the `config.yaml.example` file and replacing at least the following keys:
 
-`user.username` - Your chosen username
-`user.sshPubKey` - Your SSH public key
-`user.passwordHash` - a password hash in a crypt compatible format.
-`zerotier_network` - Your zerotier network (or remove the line from config if not desired)
-`token` - this is a token for your k3s cluster communication. Make it up, but securely. I used [pwgen -s 32](https://sourceforge.net/projects/pwgen/)
-`flux.token` - your github pat token
-`flux.owner` - your github username
-`flux.repository` - your github repository
+- `user.username` - Your chosen username
+- `user.sshPubKey` - Your SSH public key
+- `user.passwordHash` - a password hash in a crypt compatible format.
+- `zerotier_network` - Your zerotier network (or remove the line from config if not desired)
+- `token` - this is a token for your k3s cluster communication. Make it up, but securely. I used [pwgen -s 32](https://sourceforge.net/projects/pwgen/)
+- `flux.token` - your github pat token
+- `flux.owner` - your github username
+- `flux.repository` - your github repository
 
 But review all the values in the config file. Note: some are optional (such as `flux` and `zerotier_network`). The default setup here is for a 3 node cluster, with 1 acting as controlplane
 
