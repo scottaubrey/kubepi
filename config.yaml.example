@@ -1,0 +1,62 @@
+workDir: output/
+
+imageUrl: http://cdimage.ubuntu.com/releases/22.04/release/ubuntu-22.04.3-preinstalled-server-arm64+raspi.img.xz
+cacheImage: true
+
+user:
+  sshPubKey: ssh-rsa Public key
+  username: scottaubrey
+
+
+domain: kubepi
+
+network:
+  gateway: 192.168.1.1
+  dnsServer: 1.1.1.1
+  cidrSuffix: /24
+
+nodes:
+  controller:
+    hostname: controller
+    address: 192.168.1.220
+    roles:
+      - controller
+      - dns
+
+  node01:
+    hostname: node01
+    address: 192.168.1.221
+    roles:
+      - node
+
+  node02:
+    hostname: node02
+    address: 192.168.1.222
+    roles:
+      - node
+
+  node03:
+    hostname: node03
+    address: 192.168.1.223
+    roles:
+      - node
+
+
+token: Your-token-here
+k3s_url: https://controller.kubepi:6443
+
+zerotier_network: your-zerotier-network-here
+
+flux:
+  token: github_pat_your_pat_here
+  gitProvider: github
+  flags:
+    owner: "elifesciences"
+    personal: "false"
+    repository: "elife-clusters"
+    branch: "master"
+    path: "clusters/kubepi/flux"
+    components-extra: "image-reflector-controller,image-automation-controller"
+    private: "false"
+    read-write-key: "false"
+
